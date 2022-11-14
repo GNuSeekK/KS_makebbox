@@ -2,6 +2,7 @@
 """
 Created on Thu Sep 15 11:14:29 2022
 v0.0.1 - 배포 시작
+v0.0.2 - img_combine_polygon 추가
 
 @author: user
 """
@@ -64,20 +65,20 @@ def make_polygon(img: np.ndarray, polygon: list, color: tuple=(0,0,255)):
     img = cv2.fillPoly(img, [polygon], color)
     return img
 
-def img_combine_polygon(ori_img: np.ndarray, combine_img: np.ndarray, polygon_list: list):
+def img_combine_polygon(ori_img: np.ndarray, comb_img: np.ndarray, polygon_list: list):
     """
     ori_img에 combine_img의 polygon 값을 복사한다.
 
     Args:
         ori_img (np.array): 원본 이미지
-        combine_img (np.array): 병합 이미지
+        comb_img (np.array): 병합 이미지
         polygon_list (list): np.ndarray로 이루어진 폴리곤 list
 
     Returns:
         _type_: np.array
     """    
-    mask = np.zeros(ori_img.shape)
+    mask = np.zeros(comb_img.shape)
     mask = cv2.fillPoly(mask, polygon_list, (255, 255, 255))
-    index_arr = np.where(mask == 255)
-    ori_img[index_arr] = combine_img[index_arr]
+    index_arr = np.where(mask == 0)
+    ori_img[index_arr] = comb_img[index_arr]
     return ori_img
