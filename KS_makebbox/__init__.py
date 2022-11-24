@@ -1,13 +1,19 @@
+
 # -*- coding: utf-8 -*-
 """
 Created on Thu Sep 15 11:14:29 2022
 v0.0.1 - 배포 시작
 v0.0.2 - img_combine_polygon 추가
+v0.0.3 - make_polygon 수정
 
 @author: user
 """
 import cv2
 import numpy as np
+from typing import Union
+import pandas
+__version__ = 'v0.0.3'
+
 def make_bbox(img: np.ndarray, x_list: list, y_list: list, color: tuple=(0, 0, 255), outline: bool=False, thickness=0):
     """_summary_
 
@@ -50,7 +56,7 @@ def make_point(img: np.ndarray, x: int, y: int, color: tuple=(0, 0, 255), outlin
     img = cv2.line(img, (x, y), (x,  y), color=color, thickness = thickness)
     return img
 
-def make_polygon(img: np.ndarray, polygon: list, color: tuple=(0,0,255)):
+def make_polygon(img: np.ndarray, polygon: Union[list, np.ndarray], color: tuple=(0,0,255)):
     """_summary_
 
     Args:
@@ -60,8 +66,23 @@ def make_polygon(img: np.ndarray, polygon: list, color: tuple=(0,0,255)):
 
     Returns:
         np.ndarray: cv2 이미지
-    """    
-    polygon = np.array(polygon).reshape(int(len(polygon)/2),2)
+    """
+    if type(polygon) != np.ndarray:
+        try:
+            iter(polygon[0])
+            if type(polygon[0]) == str:
+                polygon = list(map(lambda x: int(round(float(x), 0)), polygon))
+            else:
+                new_polygon = []
+                for x, y in polygon:
+                    x = int(round(float(x), 0))
+                    y = int(round(float(y), 0))
+                    new_polygon.append(x)
+                    new_polygon.append(y)
+                polygon = new_polygon
+        except:
+            polygon = list(map(int, polygon))
+        polygon = np.array(polygon).reshape(len(polygon)//2, 2)
     img = cv2.fillPoly(img, [polygon], color)
     return img
 
@@ -79,6 +100,31 @@ def img_combine_polygon(ori_img: np.ndarray, comb_img: np.ndarray, polygon_list:
     """    
     mask = np.zeros(comb_img.shape)
     mask = cv2.fillPoly(mask, polygon_list, (255, 255, 255))
-    index_arr = np.where(mask == 0)
+    index_arr = np.where(mask == 255)
     ori_img[index_arr] = comb_img[index_arr]
     return ori_img
+
+# def rotate_shape(ori_img):
+#     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+#     thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]
+
+#     # Find contours, find rotated rectangle, obtain four verticies, and draw 
+#     cnts = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+#     cnts = cnts[0] if len(cnts) == 2 else cnts[1]
+#     rect = cv2.minAreaRect(cnts[0])
+#     boxes = []
+#     for idx in range(len(json_data['object']['object_2D'])//5):
+#         datas = [
+#             json_data['object']['object_2D'][idx*5],
+#             json_data['object']['object_2D'][idx*5+1],
+#             json_data['object']['object_2D'][idx*5+2],
+#             json_data['object']['object_2D'][idx*5+3],
+#             json_data['object']['object_2D'][idx*5+4],
+#         ]
+#         x, y, dx, dy = map(lambda x: int(round(x, 0)), datas[:4])
+#         rot = datas[4]
+#         box = np.int0(cv2.boxPoints([(x, y), (dx, dy), rot]))
+#         # box = np.int0(cv2.boxPoints([(x + dx//2, y + dy//2), (dx, dy), rot]))
+#         boxes.append(box)
+        
+#     img = cv2.polylines(img, boxes, True, (255, 0, 0), 3)
