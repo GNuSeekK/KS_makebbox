@@ -61,7 +61,7 @@ def make_polygon(img: np.ndarray, polygon: Union[list, np.ndarray], color: tuple
 
     Args:
         img (np.ndarray): cv2 이미지(numpy)
-        polygon (list): 폴리곤 값이 담긴 리스트
+        polygon (Union[list, np.ndarray]): 폴리곤 값이 담긴 리스트
         color (tuple, optional): 색상. Defaults to (0, 0, 255).
 
     Returns:
