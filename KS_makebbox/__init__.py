@@ -6,13 +6,14 @@ v0.0.1 - 배포 시작
 v0.0.2 - img_combine_polygon 추가
 v0.0.3 - make_polygon 수정
 v0.0.4 - get_thickness 추가, make_polygon 폴리곤 색칠에서 라인 그리기로 변경
+v0.0.5 - make_polygon 폴리곤 색칠삭제
 @author: user
 """
 import cv2
 import numpy as np
 from typing import Union
 import pandas
-__version__ = 'v0.0.4'
+__version__ = 'v0.0.5'
 
 def make_bbox(img: np.ndarray, x_list: list, y_list: list, color: tuple=(0, 0, 255), outline: bool=False, thickness=0):
     """_summary_
@@ -63,7 +64,7 @@ def make_polygon(img: np.ndarray, polygon: Union[list, np.ndarray], color: tuple
         img (np.ndarray): cv2 이미지(numpy)
         polygon (Union[list, np.ndarray]): 폴리곤 값이 담긴 리스트
         color (tuple, optional): 색상. Defaults to (0, 0, 255).
-
+        thickness (int, optional): 폴리곤의 두께
     Returns:
         np.ndarray: cv2 이미지
     """
@@ -86,7 +87,7 @@ def make_polygon(img: np.ndarray, polygon: Union[list, np.ndarray], color: tuple
             polygon = list(map(int, polygon))
         polygon = np.array(polygon).reshape(len(polygon)//2, 2)
     img = cv2.polylines(img, [polygon], isClosed=True, color=color, thickness=thickness)
-    img = cv2.fillPoly(img, [polygon], color)
+    # img = cv2.fillPoly(img, [polygon], color)
     return img
 
 def img_combine_polygon(ori_img: np.ndarray, comb_img: np.ndarray, polygon_list: list):

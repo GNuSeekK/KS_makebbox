@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name = 'KS_makebbox',
-    version='0.0.4',
+    version='0.0.5',
     description='Custom Keesung_logging',
     url='https://github.com/GNuSeekK/KS_makebbox.git',
     author='Keesung',
