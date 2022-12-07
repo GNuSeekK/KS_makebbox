@@ -5,14 +5,14 @@ Created on Thu Sep 15 11:14:29 2022
 v0.0.1 - 배포 시작
 v0.0.2 - img_combine_polygon 추가
 v0.0.3 - make_polygon 수정
-
+v0.0.4 - get_thickness 추가, make_polygon 폴리곤 색칠에서 라인 그리기로 변경
 @author: user
 """
 import cv2
 import numpy as np
 from typing import Union
 import pandas
-__version__ = 'v0.0.3'
+__version__ = 'v0.0.4'
 
 def make_bbox(img: np.ndarray, x_list: list, y_list: list, color: tuple=(0, 0, 255), outline: bool=False, thickness=0):
     """_summary_
@@ -31,7 +31,7 @@ def make_bbox(img: np.ndarray, x_list: list, y_list: list, color: tuple=(0, 0, 2
     x1, x2 = min(x_list), max(x_list)
     y1, y2 = min(y_list), max(y_list)
     if thickness == 0:
-        thickness = int(img.shape[0] * img.shape[1] / 1000000 ) + 1
+        thickness = get_thickness(img)
     if outline == True:
         img = cv2.rectangle(img, (x1, y1), (x2, y2), (0,0,0), thickness = int(thickness * 1.5) + 1)
     img = cv2.rectangle(img, (x1, y1), (x2, y2), color, thickness = thickness)
@@ -56,7 +56,7 @@ def make_point(img: np.ndarray, x: int, y: int, color: tuple=(0, 0, 255), outlin
     img = cv2.line(img, (x, y), (x,  y), color=color, thickness = thickness)
     return img
 
-def make_polygon(img: np.ndarray, polygon: Union[list, np.ndarray], color: tuple=(0,0,255)):
+def make_polygon(img: np.ndarray, polygon: Union[list, np.ndarray], color: tuple=(0,0,255), thickness: int=0):
     """_summary_
 
     Args:
@@ -67,6 +67,8 @@ def make_polygon(img: np.ndarray, polygon: Union[list, np.ndarray], color: tuple
     Returns:
         np.ndarray: cv2 이미지
     """
+    if thickness == 0:
+        thickness = get_thickness(img)
     if type(polygon) != np.ndarray:
         try:
             iter(polygon[0])
@@ -83,6 +85,7 @@ def make_polygon(img: np.ndarray, polygon: Union[list, np.ndarray], color: tuple
         except:
             polygon = list(map(int, polygon))
         polygon = np.array(polygon).reshape(len(polygon)//2, 2)
+    img = cv2.polylines(img, [polygon], isClosed=True, color=color, thickness=thickness)
     img = cv2.fillPoly(img, [polygon], color)
     return img
 
@@ -103,6 +106,9 @@ def img_combine_polygon(ori_img: np.ndarray, comb_img: np.ndarray, polygon_list:
     index_arr = np.where(mask == 255)
     ori_img[index_arr] = comb_img[index_arr]
     return ori_img
+
+def get_thickness(img: np.ndarray):
+    return int(img.shape[0] * img.shape[1] / 1000000 ) + 1
 
 # def rotate_shape(ori_img):
 #     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
