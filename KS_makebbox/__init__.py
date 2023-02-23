@@ -10,6 +10,7 @@ v0.0.5 - make_polygon 폴리곤 색칠삭제
 v0.0.6 - calc_IoU 추가, box_to_polygon 추가, polygon으로 모두 동작하게 함
 v0.0.7 - box_to_polygon 수정 make_polygon fill 기능 추가
 v0.0.8 - calc_IoU 오류 수정
+v0.0.9 - calc_IoU zero division 오류 수정, calc_IoU => calc_iou로 변경
 @author: user
 """
 import cv2
@@ -18,7 +19,7 @@ from typing import Union
 import pandas
 from shapely.geometry import Polygon
 
-__version__ = 'v0.0.8'
+__version__ = 'v0.0.9'
 
 def make_bbox(img: np.ndarray, x_list: list, y_list: list, color: tuple=(0, 0, 255), outline: bool=False, thickness=0):
     """_summary_
@@ -124,7 +125,7 @@ def get_thickness(img: np.ndarray):
     return int(img.shape[0] * img.shape[1] / 1000000 ) + 1
 
 # calculating IoU of two polygons
-def calc_IoU(polygon1: list, polygon2: list):
+def calc_iou(polygon1: list, polygon2: list):
     """
     두 폴리곤의 IoU를 계산한다.
 
@@ -137,7 +138,14 @@ def calc_IoU(polygon1: list, polygon2: list):
     """    
     polygon1 = Polygon(polygon1)
     polygon2 = Polygon(polygon2)
-    return polygon1.intersection(polygon2).area / polygon1.union(polygon2).area
+    intersection = polygon1.intersection(polygon2)
+    union = polygon1.union(polygon2)
+    # error handling
+    if intersection.is_empty:
+        return 0.0
+    else:
+        return intersection.area / union.area
+    
 
 def box_to_polygon(box: list):
     """
