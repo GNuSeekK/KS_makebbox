@@ -18,7 +18,7 @@ from typing import Union
 import pandas
 from shapely.geometry import Polygon
 
-__version__ = 'v0.0.7'
+__version__ = 'v0.0.8'
 
 def make_bbox(img: np.ndarray, x_list: list, y_list: list, color: tuple=(0, 0, 255), outline: bool=False, thickness=0):
     """_summary_
