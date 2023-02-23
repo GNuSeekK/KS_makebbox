@@ -7,13 +7,16 @@ v0.0.2 - img_combine_polygon 추가
 v0.0.3 - make_polygon 수정
 v0.0.4 - get_thickness 추가, make_polygon 폴리곤 색칠에서 라인 그리기로 변경
 v0.0.5 - make_polygon 폴리곤 색칠삭제
+v0.0.6 - calc_IoU 추가, box_to_polygon 추가, polygon으로 모두 동작하게 함
 @author: user
 """
 import cv2
 import numpy as np
 from typing import Union
 import pandas
-__version__ = 'v0.0.5'
+from sympy import Polygon
+
+__version__ = 'v0.0.6'
 
 def make_bbox(img: np.ndarray, x_list: list, y_list: list, color: tuple=(0, 0, 255), outline: bool=False, thickness=0):
     """_summary_
@@ -57,7 +60,7 @@ def make_point(img: np.ndarray, x: int, y: int, color: tuple=(0, 0, 255), outlin
     img = cv2.line(img, (x, y), (x,  y), color=color, thickness = thickness)
     return img
 
-def make_polygon(img: np.ndarray, polygon: Union[list, np.ndarray], color: tuple=(0,0,255), thickness: int=0):
+def make_polygon(img: np.ndarray, polygon: Union[list, np.ndarray], color: tuple=(0,0,255), fill: bool=False, fill_color: tuple=(0,0,0), thickness: int=0):
     """_summary_
 
     Args:
@@ -83,9 +86,14 @@ def make_polygon(img: np.ndarray, polygon: Union[list, np.ndarray], color: tuple
                     new_polygon.append(x)
                     new_polygon.append(y)
                 polygon = new_polygon
+            polygon = np.array(polygon).reshape(len(polygon)//2, 2)
         except:
-            polygon = list(map(int, polygon))
-        polygon = np.array(polygon).reshape(len(polygon)//2, 2)
+            # 박스 좌표값이 들어온 경우
+            if len(polygon) == 4:
+                polygon = box_to_polygon(polygon)
+            else: # 폴리곤 좌표값이 들어온 경우
+                polygon = list(map(int, polygon))
+            polygon = np.array(polygon).reshape(len(polygon)//2, 2)
     img = cv2.polylines(img, [polygon], isClosed=True, color=color, thickness=thickness)
     # img = cv2.fillPoly(img, [polygon], color)
     return img
@@ -110,6 +118,42 @@ def img_combine_polygon(ori_img: np.ndarray, comb_img: np.ndarray, polygon_list:
 
 def get_thickness(img: np.ndarray):
     return int(img.shape[0] * img.shape[1] / 1000000 ) + 1
+
+# calculating IoU of two polygons
+def calc_IoU(poly1: np.array, poly2: np.array):
+    """
+    폴리곤 두 개의 IoU를 구한다.
+
+    Args:
+        poly1 (np.array): 폴리곤1
+        poly2 (np.array): 폴리곤2
+
+    Returns:
+        _type_: float
+    """    
+    poly1 = Polygon(poly1)
+    poly2 = Polygon(poly2)
+    if not poly1.intersects(poly2):
+        return 0.0
+    else:
+        intersection = poly1.intersection(poly2).area
+        union = poly1.area + poly2.area - intersection
+        return intersection / union
+
+def box_to_polygon(box: list):
+    """
+    box를 폴리곤으로 변환한다.
+
+    Args:
+        box (list): [x1, y1, x2, y2]
+
+    Returns:
+        _type_: list
+    """    
+    x1, y1, x2, y2 = box
+    return np.array([[x1, y1], [x2, y1], [x2, y2], [x1, y2]])
+
+
 
 # def rotate_shape(ori_img):
 #     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
