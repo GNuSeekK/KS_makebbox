@@ -9,13 +9,14 @@ v0.0.4 - get_thickness 추가, make_polygon 폴리곤 색칠에서 라인 그리
 v0.0.5 - make_polygon 폴리곤 색칠삭제
 v0.0.6 - calc_IoU 추가, box_to_polygon 추가, polygon으로 모두 동작하게 함
 v0.0.7 - box_to_polygon 수정 make_polygon fill 기능 추가
+v0.0.8 - calc_IoU 오류 수정
 @author: user
 """
 import cv2
 import numpy as np
 from typing import Union
 import pandas
-from sympy import Polygon
+from shapely.geometry import Polygon
 
 __version__ = 'v0.0.7'
 
@@ -89,6 +90,7 @@ def make_polygon(img: np.ndarray, polygon: Union[list, np.ndarray], color: tuple
                 polygon = new_polygon
             polygon = np.array(polygon).reshape(len(polygon)//2, 2)
         except:
+            # print(polygon)
             # 박스 좌표값이 들어온 경우
             if len(polygon) == 4:
                 polygon = box_to_polygon(polygon)
@@ -122,25 +124,20 @@ def get_thickness(img: np.ndarray):
     return int(img.shape[0] * img.shape[1] / 1000000 ) + 1
 
 # calculating IoU of two polygons
-def calc_IoU(poly1: np.array, poly2: np.array):
+def calc_IoU(polygon1: list, polygon2: list):
     """
-    폴리곤 두 개의 IoU를 구한다.
+    두 폴리곤의 IoU를 계산한다.
 
     Args:
-        poly1 (np.array): 폴리곤1
-        poly2 (np.array): 폴리곤2
+        polygon1 (list): 폴리곤1
+        polygon2 (list): 폴리곤2
 
     Returns:
         _type_: float
     """    
-    poly1 = Polygon(poly1)
-    poly2 = Polygon(poly2)
-    if not poly1.intersects(poly2):
-        return 0.0
-    else:
-        intersection = poly1.intersection(poly2).area
-        union = poly1.area + poly2.area - intersection
-        return intersection / union
+    polygon1 = Polygon(polygon1)
+    polygon2 = Polygon(polygon2)
+    return polygon1.intersection(polygon2).area / polygon1.union(polygon2).area
 
 def box_to_polygon(box: list):
     """
