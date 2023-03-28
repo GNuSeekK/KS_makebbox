@@ -11,6 +11,7 @@ v0.0.6 - calc_IoU 추가, box_to_polygon 추가, polygon으로 모두 동작하�
 v0.0.7 - box_to_polygon 수정 make_polygon fill 기능 추가
 v0.0.8 - calc_IoU 오류 수정
 v0.0.9 - calc_IoU zero division 오류 수정, calc_IoU => calc_iou로 변경
+v0.1.0 - make_polygon 투명도 기능 추가
 @author: user
 """
 import cv2
@@ -19,7 +20,7 @@ from typing import Union
 import pandas
 from shapely.geometry import Polygon
 
-__version__ = 'v0.0.9'
+__version__ = 'v0.1.0'
 
 def make_bbox(img: np.ndarray, x_list: list, y_list: list, color: tuple=(0, 0, 255), outline: bool=False, thickness=0):
     """_summary_
@@ -63,7 +64,16 @@ def make_point(img: np.ndarray, x: int, y: int, color: tuple=(0, 0, 255), outlin
     img = cv2.line(img, (x, y), (x,  y), color=color, thickness = thickness)
     return img
 
-def make_polygon(img: np.ndarray, polygon: Union[list, np.ndarray], color: tuple=(0,0,255), fill: bool=False, fill_color: tuple=(0,0,0), thickness: int=0):
+def make_polygon(
+        img: np.ndarray, 
+        polygon: Union[list, np.ndarray], 
+        color: tuple=(0,0,255),
+        fill: bool=False,
+        fill_color: tuple=(0,0,0),
+        thickness: int=0,
+        shade: bool=False,
+        opacity: float=0.5
+    ):
     """_summary_
 
     Args:
@@ -98,9 +108,14 @@ def make_polygon(img: np.ndarray, polygon: Union[list, np.ndarray], color: tuple
             else: # 폴리곤 좌표값이 들어온 경우
                 polygon = list(map(int, polygon))
                 polygon = np.array(polygon).reshape(len(polygon)//2, 2)
-    img = cv2.polylines(img, [polygon], isClosed=True, color=color, thickness=thickness)
-    if fill:
+    if fill and shade:
+        add_img = img.copy()
+        add_img = cv2.fillPoly(add_img, [polygon], color=fill_color)
+        img = cv2.addWeighted(img, 1 - opacity, add_img, opacity, 0)
+    elif fill:
         img = cv2.fillPoly(img, [polygon], color=fill_color)
+    img = cv2.polylines(img, [polygon], isClosed=True, color=color, thickness=thickness)
+        
     return img
 
 def img_combine_polygon(ori_img: np.ndarray, comb_img: np.ndarray, polygon_list: list):
